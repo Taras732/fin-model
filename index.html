@@ -185,6 +185,21 @@ tr.breakeven td:first-child::before{content:"⭐ "}
   .cost-amt{background:transparent!important;box-shadow:none!important}
 }
 
+/* BENEFIT PARAMS */
+.bp-grid{display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:#F8FAFC;border-radius:6px;margin-bottom:12px;font-size:12.5px;border-left:3px solid var(--accent)}
+.bp-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.bp-row > span:first-child{color:var(--t2)}
+.bp-row > span:last-child{font-weight:600;color:var(--navy);display:inline-flex;align-items:center;gap:1px}
+.bp-row .cost-amt{width:72px;font-size:12.5px}
+.net-benefit{margin-top:12px;padding:12px 14px;background:#D5F5E3;border-radius:6px;border-left:4px solid var(--green)}
+.net-benefit__label{font-size:11px;color:var(--t3);text-transform:uppercase;font-weight:700;margin-bottom:6px;letter-spacing:.05em}
+.net-benefit__value{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.net-benefit__value > span:first-child{font-size:22px;font-weight:700;color:var(--green)}
+.net-benefit__value > span:last-child{font-size:14px;color:var(--t2)}
+.net-benefit__roi{font-size:11px;color:var(--t3);margin-top:4px}
+.net-benefit__roi b{color:var(--navy)}
+.benefit-note{margin-top:12px;font-size:11px;color:var(--t2);line-height:1.6;padding:10px 12px;background:#F8FAFC;border-radius:6px;border-left:3px solid var(--border)}
+
 /* REVENUE PER CLIENT */
 .rev-breakdown{background:#EEF7FF;border-radius:6px;padding:14px;margin-top:12px}
 .rev-breakdown-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
@@ -330,27 +345,50 @@ tr.breakeven td:first-child::before{content:"⭐ "}
         </div>
       </div>
       <div class="card">
-        <div class="section-title" style="margin-bottom:10px">Дохід на 1 клієнта/міс</div>
+        <div class="section-title" style="margin-bottom:10px">💰 Вигода для перевізника</div>
+
+        <div class="bp-grid">
+          <div class="bp-row"><span>Автопарк (авто)</span><span>🚚 <input id="b_fleet" type="number" class="cost-amt" value="20" min="1" step="1"></span></div>
+          <div class="bp-row"><span>Логіст — ЗП (₴)</span><span>₴<input id="b_zp_log" type="number" class="cost-amt" value="35000" min="0" step="500"> × <input id="b_fte_log" type="number" class="cost-amt" value="1" min="0" step="0.1" style="width:44px"> FTE</span></div>
+          <div class="bp-row"><span>Бухгалтер — ЗП (₴)</span><span>₴<input id="b_zp_buh" type="number" class="cost-amt" value="40000" min="0" step="500"> × <input id="b_fte_buh" type="number" class="cost-amt" value="0.5" min="0" step="0.1" style="width:44px"> FTE</span></div>
+          <div class="bp-row"><span>Координатор — ЗП (₴)</span><span>₴<input id="b_zp_coor" type="number" class="cost-amt" value="30000" min="0" step="500"> × <input id="b_fte_coor" type="number" class="cost-amt" value="0.5" min="0" step="0.1" style="width:44px"> FTE</span></div>
+        </div>
+
         <div class="rev-breakdown">
-          <div class="rev-breakdown-title">Розрахунок виручки (поточні параметри)</div>
-          <div class="rev-row"><span>Підписка</span><span id="r_sub_uah">₴3,000</span></div>
-          <div class="rev-row"><span>Комісія з рейсів</span><span id="r_comm_uah">₴15,000</span></div>
-          <div class="rev-total">
-            <span>Разом / клієнт</span>
-            <span id="r_total_uah">₴18,000</span>
-          </div>
-          <div class="rev-total" style="margin-top:8px;padding-top:8px;border-top:2px solid var(--accent)">
-            <span>≈ в доларах</span>
-            <span id="r_total_usd" style="color:var(--navy);font-size:16px">$409</span>
+          <div class="rev-breakdown-title">Економія на персоналі / міс</div>
+          <div class="rev-row"><span id="bn_log_l">Логіст (−1 FTE)</span><span id="bn_log_uah">₴35 000</span></div>
+          <div class="rev-row"><span id="bn_buh_l">Бухгалтер (−0.5 FTE)</span><span id="bn_buh_uah">₴20 000</span></div>
+          <div class="rev-row"><span id="bn_coor_l">Координатор (−0.5 FTE)</span><span id="bn_coor_uah">₴15 000</span></div>
+          <div class="rev-total"><span>Разом економія</span><span id="bn_total_uah">₴70 000</span></div>
+          <div class="rev-total" style="margin-top:6px;padding-top:6px;border-top:1px dashed #BEE3F8">
+            <span>≈ в доларах</span><span id="bn_total_usd" style="color:var(--navy);font-size:15px">$1 590</span>
           </div>
         </div>
-        <div class="formula" id="formula_display">
-          Комісія = 20 рейсів × ₴15,000 × 5% = ₴15,000
+
+        <div class="rev-breakdown" style="margin-top:10px;background:#FFF4E6">
+          <div class="rev-breakdown-title">Вартість TreximAI / міс</div>
+          <div class="rev-row"><span>Підписка</span><span id="cst_sub_uah">₴6 000</span></div>
+          <div class="rev-row"><span id="cst_comm_l">Комісія з рейсів (3%)</span><span id="cst_comm_uah">₴15 000</span></div>
+          <div class="rev-total"><span>Разом</span><span id="cst_total_uah">₴21 000</span></div>
+          <div class="rev-total" style="margin-top:6px;padding-top:6px;border-top:1px dashed #F5D9A7">
+            <span>≈ в доларах</span><span id="cst_total_usd" style="color:var(--navy);font-size:15px">$477</span>
+          </div>
         </div>
-        <div style="margin-top:12px;padding:10px 14px;background:#EEF7FF;border-radius:6px">
-          <div style="font-size:11px;color:var(--t3);text-transform:uppercase;font-weight:700;margin-bottom:6px">Клієнтів для break-even</div>
-          <div style="font-size:24px;font-weight:700;color:var(--navy)" id="clients_needed">—</div>
-          <div style="font-size:11px;color:var(--t3)" id="clients_needed_hint">при поточних параметрах</div>
+
+        <div class="net-benefit">
+          <div class="net-benefit__label">Чиста вигода клієнта / міс</div>
+          <div class="net-benefit__value">
+            <span id="net_uah">₴49 000</span>
+            <span id="net_usd">≈ $1 113</span>
+          </div>
+          <div class="net-benefit__roi">ROI: <b id="roi_x">3.3×</b> · окупність <b id="roi_payback">з 1-го місяця</b></div>
+        </div>
+
+        <div class="benefit-note">
+          📝 <b>Додатково</b> (поза розрахунком):
+          · зниження штрафів за помилкові ТТН
+          · оптимізація маршрутів — 2–3% економії пального
+          · скорочення простоїв автопарку
         </div>
       </div>
     </div>
@@ -693,17 +731,9 @@ function renderChart(rows, targetClients) {
 function recalc() {
   const p = getParams();
   const rev = revenuePerClient(p);
-  const needed = Math.ceil(p.burn / rev.totalUsd);
 
-  // update revenue per client display
-  document.getElementById('r_sub_uah').textContent   = '₴' + p.subscription.toLocaleString('uk-UA');
-  document.getElementById('r_comm_uah').textContent  = '₴' + Math.round(rev.commUah).toLocaleString('uk-UA');
-  document.getElementById('r_total_uah').textContent = '₴' + Math.round(rev.totalUah).toLocaleString('uk-UA');
-  document.getElementById('r_total_usd').textContent = '$' + Math.round(rev.totalUsd).toLocaleString('uk-UA');
-  document.getElementById('formula_display').textContent =
-    `Комісія = ${p.shipmentspm} рейсів × ₴${p.shipmentVal.toLocaleString('uk-UA')} × ${(p.commission*100).toFixed(1)}% = ₴${Math.round(rev.commUah).toLocaleString('uk-UA')}`;
-  document.getElementById('clients_needed').textContent = needed;
-  document.getElementById('clients_needed_hint').textContent = `${fmt(p.burn)} ÷ ${fmt(rev.totalUsd)} / клієнт`;
+  // Benefit block
+  updateBenefit(p, rev);
 
   // KPIs
   document.getElementById('kpi_burn').textContent = fmt(p.burn);
@@ -733,8 +763,72 @@ document.querySelectorAll('.param-group input, .param-group select').forEach(el 
   el.addEventListener('change', recalc);
 });
 
+// ── BENEFIT (carrier savings) ───────────────────────────
+const BENEFIT_IDS = ['b_fleet','b_zp_log','b_fte_log','b_zp_buh','b_fte_buh','b_zp_coor','b_fte_coor'];
+
+function getBenefit() {
+  const g = id => +document.getElementById(id).value || 0;
+  return {
+    fleet:    g('b_fleet'),
+    zpLog:    g('b_zp_log'),    fteLog:  g('b_fte_log'),
+    zpBuh:    g('b_zp_buh'),    fteBuh:  g('b_fte_buh'),
+    zpCoor:   g('b_zp_coor'),   fteCoor: g('b_fte_coor'),
+  };
+}
+
+function fmtUah(v) { return '₴' + Math.round(v).toLocaleString('uk-UA'); }
+function fmtUsd(v) { return '$' + Math.round(v).toLocaleString('uk-UA'); }
+
+function updateBenefit(p, rev) {
+  const b = getBenefit();
+  const logUah  = b.zpLog  * b.fteLog;
+  const buhUah  = b.zpBuh  * b.fteBuh;
+  const coorUah = b.zpCoor * b.fteCoor;
+  const benefitUah = logUah + buhUah + coorUah;
+  const benefitUsd = benefitUah / p.rate;
+
+  document.getElementById('bn_log_l').textContent  = `Логіст (−${b.fteLog} FTE)`;
+  document.getElementById('bn_buh_l').textContent  = `Бухгалтер (−${b.fteBuh} FTE)`;
+  document.getElementById('bn_coor_l').textContent = `Координатор (−${b.fteCoor} FTE)`;
+  document.getElementById('bn_log_uah').textContent  = fmtUah(logUah);
+  document.getElementById('bn_buh_uah').textContent  = fmtUah(buhUah);
+  document.getElementById('bn_coor_uah').textContent = fmtUah(coorUah);
+  document.getElementById('bn_total_uah').textContent = fmtUah(benefitUah);
+  document.getElementById('bn_total_usd').textContent = fmtUsd(benefitUsd);
+
+  document.getElementById('cst_sub_uah').textContent   = fmtUah(rev.subUah);
+  document.getElementById('cst_comm_l').textContent    = `Комісія з рейсів (${(p.commission*100).toFixed(1)}%)`;
+  document.getElementById('cst_comm_uah').textContent  = fmtUah(rev.commUah);
+  document.getElementById('cst_total_uah').textContent = fmtUah(rev.totalUah);
+  document.getElementById('cst_total_usd').textContent = fmtUsd(rev.totalUsd);
+
+  const netUah = benefitUah - rev.totalUah;
+  const netUsd = netUah / p.rate;
+  document.getElementById('net_uah').textContent = fmtUah(netUah);
+  document.getElementById('net_usd').textContent = '≈ ' + fmtUsd(netUsd);
+
+  const roi = rev.totalUah > 0 ? benefitUah / rev.totalUah : 0;
+  const roiEl = document.getElementById('roi_x');
+  const payEl = document.getElementById('roi_payback');
+  if (roi >= 1) {
+    roiEl.textContent = roi.toFixed(1) + '×';
+    payEl.textContent = 'з 1-го місяця';
+  } else if (roi > 0) {
+    roiEl.textContent = roi.toFixed(2) + '×';
+    payEl.textContent = `через ${Math.ceil(1/roi)} міс`;
+  } else {
+    roiEl.textContent = '—';
+    payEl.textContent = '—';
+  }
+}
+
+BENEFIT_IDS.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', () => recalc());
+});
+
 // ── COSTS (source of truth for burn) ───────────────────
-const COST_INPUTS = document.querySelectorAll('.cost-amt');
+const COST_INPUTS = document.querySelectorAll('.cost-amt[data-cost]');
 function sumCosts() {
   let total = 0;
   COST_INPUTS.forEach(inp => { total += (+inp.value || 0); });
@@ -771,6 +865,7 @@ function collectParams() {
   const out = {};
   PARAM_IDS.forEach(id => { out[id] = document.getElementById(id).value; });
   COST_INPUTS.forEach(inp => { out['cost_' + inp.dataset.cost] = inp.value; });
+  BENEFIT_IDS.forEach(id => { out[id] = document.getElementById(id).value; });
   return out;
 }
 
@@ -781,6 +876,9 @@ function applyParams(values) {
   COST_INPUTS.forEach(inp => {
     const k = 'cost_' + inp.dataset.cost;
     if (values[k] !== undefined) inp.value = values[k];
+  });
+  BENEFIT_IDS.forEach(id => {
+    if (values[id] !== undefined) document.getElementById(id).value = values[id];
   });
   syncBurnFromCosts();
 }
