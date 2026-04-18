@@ -186,11 +186,23 @@ tr.breakeven td:first-child::before{content:"⭐ "}
 }
 
 /* BENEFIT PARAMS */
-.bp-grid{display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:#F8FAFC;border-radius:6px;margin-bottom:12px;font-size:12.5px;border-left:3px solid var(--accent)}
-.bp-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.bp-row > span:first-child{color:var(--t2)}
-.bp-row > span:last-child{font-weight:600;color:var(--navy);display:inline-flex;align-items:center;gap:1px}
-.bp-row .cost-amt{width:72px;font-size:12.5px}
+.bp-fleet{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#F8FAFC;border-radius:6px;margin-bottom:10px;font-size:13px;border-left:3px solid var(--accent);color:var(--t2)}
+.bp-fleet .cost-amt{width:62px;font-size:13px;font-weight:700;color:var(--navy)}
+.bp-fleet-hint{color:var(--t3);font-size:11px;margin-left:auto}
+.bp-table{width:100%;border-collapse:collapse;margin-bottom:4px;font-size:12.5px}
+.bp-table th{background:transparent;color:var(--t3);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;padding:6px 4px;text-align:center;border-bottom:1px solid var(--border)}
+.bp-table th:first-child{text-align:left}
+.bp-table th:last-child{text-align:right}
+.bp-table td{padding:6px 4px;border-bottom:1px dashed #E2E8F0;text-align:center;vertical-align:middle;color:var(--t1);font-weight:500;white-space:nowrap}
+.bp-table td:first-child{text-align:left;font-weight:600;color:var(--t1)}
+.bp-table td:last-child{text-align:right}
+.bp-table .bp-amt{display:inline-flex;align-items:center;gap:1px;font-weight:600;color:var(--navy)}
+.bp-table .bp-amt .cost-amt{width:72px;font-size:12.5px;font-weight:600}
+.bp-table .bp-cnt{width:44px;font-size:13px;font-weight:700;color:var(--navy);text-align:center}
+.bp-savings{color:var(--green);font-weight:700}
+.bp-total{font-size:14px}
+.bp-table tfoot td{border-top:2px solid var(--border);border-bottom:none;padding:8px 4px}
+.bp-table tfoot tr.bp-usd-row td{border-top:1px dashed var(--border);padding-top:4px;color:var(--t2);font-weight:600}
 .net-benefit{margin-top:12px;padding:12px 14px;background:#D5F5E3;border-radius:6px;border-left:4px solid var(--green)}
 .net-benefit__label{font-size:11px;color:var(--t3);text-transform:uppercase;font-weight:700;margin-bottom:6px;letter-spacing:.05em}
 .net-benefit__value{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
@@ -347,23 +359,50 @@ tr.breakeven td:first-child::before{content:"⭐ "}
       <div class="card">
         <div class="section-title" style="margin-bottom:10px">💰 Вигода для перевізника</div>
 
-        <div class="bp-grid">
-          <div class="bp-row"><span>Автопарк (авто)</span><span>🚚 <input id="b_fleet" type="number" class="cost-amt" value="20" min="1" step="1"></span></div>
-          <div class="bp-row"><span>Логіст — ЗП (₴)</span><span>₴<input id="b_zp_log" type="number" class="cost-amt" value="35000" min="0" step="500"> × <input id="b_fte_log" type="number" class="cost-amt" value="1" min="0" step="0.1" style="width:44px"> FTE</span></div>
-          <div class="bp-row"><span>Бухгалтер — ЗП (₴)</span><span>₴<input id="b_zp_buh" type="number" class="cost-amt" value="40000" min="0" step="500"> × <input id="b_fte_buh" type="number" class="cost-amt" value="0.5" min="0" step="0.1" style="width:44px"> FTE</span></div>
-          <div class="bp-row"><span>Координатор — ЗП (₴)</span><span>₴<input id="b_zp_coor" type="number" class="cost-amt" value="30000" min="0" step="500"> × <input id="b_fte_coor" type="number" class="cost-amt" value="0.5" min="0" step="0.1" style="width:44px"> FTE</span></div>
+        <div class="bp-fleet">
+          <span>🚚 Автопарк (авто)</span>
+          <input id="b_fleet" type="number" class="cost-amt" value="20" min="1" step="1">
+          <span class="bp-fleet-hint" id="fleet_hint">для 20 авто</span>
         </div>
 
-        <div class="rev-breakdown">
-          <div class="rev-breakdown-title">Економія на персоналі / міс</div>
-          <div class="rev-row"><span id="bn_log_l">Логіст (−1 FTE)</span><span id="bn_log_uah">₴35 000</span></div>
-          <div class="rev-row"><span id="bn_buh_l">Бухгалтер (−0.5 FTE)</span><span id="bn_buh_uah">₴20 000</span></div>
-          <div class="rev-row"><span id="bn_coor_l">Координатор (−0.5 FTE)</span><span id="bn_coor_uah">₴15 000</span></div>
-          <div class="rev-total"><span>Разом економія</span><span id="bn_total_uah">₴70 000</span></div>
-          <div class="rev-total" style="margin-top:6px;padding-top:6px;border-top:1px dashed #BEE3F8">
-            <span>≈ в доларах</span><span id="bn_total_usd" style="color:var(--navy);font-size:15px">$1 590</span>
-          </div>
-        </div>
+        <table class="bp-table">
+          <thead>
+            <tr><th>Роль</th><th>ЗП (₴/міс)</th><th>До</th><th>Після</th><th>Економія</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Логіст</td>
+              <td><span class="bp-amt">₴<input id="b_zp_log" type="number" class="cost-amt" value="35000" min="0" step="500"></span></td>
+              <td><input id="b_cnt_log_b" type="number" class="cost-amt bp-cnt" value="2" min="0" step="0.5" data-ratio="0.1"></td>
+              <td><input id="b_cnt_log_a" type="number" class="cost-amt bp-cnt" value="1" min="0" step="0.5" data-ratio="0.05"></td>
+              <td id="bn_log_uah" class="bp-savings">₴35 000</td>
+            </tr>
+            <tr>
+              <td>Бухгалтер</td>
+              <td><span class="bp-amt">₴<input id="b_zp_buh" type="number" class="cost-amt" value="40000" min="0" step="500"></span></td>
+              <td><input id="b_cnt_buh_b" type="number" class="cost-amt bp-cnt" value="1" min="0" step="0.5" data-ratio="0.05"></td>
+              <td><input id="b_cnt_buh_a" type="number" class="cost-amt bp-cnt" value="0.5" min="0" step="0.5" data-ratio="0.025"></td>
+              <td id="bn_buh_uah" class="bp-savings">₴20 000</td>
+            </tr>
+            <tr>
+              <td>Координатор</td>
+              <td><span class="bp-amt">₴<input id="b_zp_coor" type="number" class="cost-amt" value="30000" min="0" step="500"></span></td>
+              <td><input id="b_cnt_coor_b" type="number" class="cost-amt bp-cnt" value="1" min="0" step="0.5" data-ratio="0.05"></td>
+              <td><input id="b_cnt_coor_a" type="number" class="cost-amt bp-cnt" value="0.5" min="0" step="0.5" data-ratio="0.025"></td>
+              <td id="bn_coor_uah" class="bp-savings">₴15 000</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4">Разом економія</td>
+              <td id="bn_total_uah" class="bp-savings bp-total">₴70 000</td>
+            </tr>
+            <tr class="bp-usd-row">
+              <td colspan="4">≈ в доларах</td>
+              <td id="bn_total_usd">$1 590</td>
+            </tr>
+          </tfoot>
+        </table>
 
         <div class="rev-breakdown" style="margin-top:10px;background:#FFF4E6">
           <div class="rev-breakdown-title">Вартість TreximAI / міс</div>
@@ -764,15 +803,15 @@ document.querySelectorAll('.param-group input, .param-group select').forEach(el 
 });
 
 // ── BENEFIT (carrier savings) ───────────────────────────
-const BENEFIT_IDS = ['b_fleet','b_zp_log','b_fte_log','b_zp_buh','b_fte_buh','b_zp_coor','b_fte_coor'];
+const BENEFIT_IDS = ['b_fleet','b_zp_log','b_cnt_log_b','b_cnt_log_a','b_zp_buh','b_cnt_buh_b','b_cnt_buh_a','b_zp_coor','b_cnt_coor_b','b_cnt_coor_a'];
 
 function getBenefit() {
   const g = id => +document.getElementById(id).value || 0;
   return {
     fleet:    g('b_fleet'),
-    zpLog:    g('b_zp_log'),    fteLog:  g('b_fte_log'),
-    zpBuh:    g('b_zp_buh'),    fteBuh:  g('b_fte_buh'),
-    zpCoor:   g('b_zp_coor'),   fteCoor: g('b_fte_coor'),
+    zpLog:    g('b_zp_log'),    cntLogB:  g('b_cnt_log_b'),  cntLogA:  g('b_cnt_log_a'),
+    zpBuh:    g('b_zp_buh'),    cntBuhB:  g('b_cnt_buh_b'),  cntBuhA:  g('b_cnt_buh_a'),
+    zpCoor:   g('b_zp_coor'),   cntCoorB: g('b_cnt_coor_b'), cntCoorA: g('b_cnt_coor_a'),
   };
 }
 
@@ -781,20 +820,18 @@ function fmtUsd(v) { return '$' + Math.round(v).toLocaleString('uk-UA'); }
 
 function updateBenefit(p, rev) {
   const b = getBenefit();
-  const logUah  = b.zpLog  * b.fteLog;
-  const buhUah  = b.zpBuh  * b.fteBuh;
-  const coorUah = b.zpCoor * b.fteCoor;
+  const logUah  = Math.max(0, b.zpLog  * (b.cntLogB  - b.cntLogA));
+  const buhUah  = Math.max(0, b.zpBuh  * (b.cntBuhB  - b.cntBuhA));
+  const coorUah = Math.max(0, b.zpCoor * (b.cntCoorB - b.cntCoorA));
   const benefitUah = logUah + buhUah + coorUah;
   const benefitUsd = benefitUah / p.rate;
 
-  document.getElementById('bn_log_l').textContent  = `Логіст (−${b.fteLog} FTE)`;
-  document.getElementById('bn_buh_l').textContent  = `Бухгалтер (−${b.fteBuh} FTE)`;
-  document.getElementById('bn_coor_l').textContent = `Координатор (−${b.fteCoor} FTE)`;
+  document.getElementById('fleet_hint').textContent = `для ${b.fleet} авто`;
   document.getElementById('bn_log_uah').textContent  = fmtUah(logUah);
   document.getElementById('bn_buh_uah').textContent  = fmtUah(buhUah);
   document.getElementById('bn_coor_uah').textContent = fmtUah(coorUah);
   document.getElementById('bn_total_uah').textContent = fmtUah(benefitUah);
-  document.getElementById('bn_total_usd').textContent = fmtUsd(benefitUsd);
+  document.getElementById('bn_total_usd').textContent = '≈ ' + fmtUsd(benefitUsd);
 
   document.getElementById('cst_sub_uah').textContent   = fmtUah(rev.subUah);
   document.getElementById('cst_comm_l').textContent    = `Комісія з рейсів (${(p.commission*100).toFixed(1)}%)`;
@@ -822,9 +859,30 @@ function updateBenefit(p, rev) {
   }
 }
 
+function rescaleStaffFromFleet() {
+  const fleet = +document.getElementById('b_fleet').value || 0;
+  document.querySelectorAll('.bp-cnt').forEach(inp => {
+    const ratio = +inp.dataset.ratio;
+    if (!isFinite(ratio)) return;
+    const v = Math.max(0, Math.round(fleet * ratio * 2) / 2);
+    inp.value = v;
+  });
+}
+
 BENEFIT_IDS.forEach(id => {
   const el = document.getElementById(id);
-  if (el) el.addEventListener('input', () => recalc());
+  if (!el) return;
+  if (id === 'b_fleet') {
+    el.addEventListener('input', () => { rescaleStaffFromFleet(); recalc(); });
+  } else if (id.startsWith('b_cnt_')) {
+    el.addEventListener('input', () => {
+      const fleet = +document.getElementById('b_fleet').value || 1;
+      el.dataset.ratio = (+el.value || 0) / fleet;
+      recalc();
+    });
+  } else {
+    el.addEventListener('input', () => recalc());
+  }
 });
 
 // ── COSTS (source of truth for burn) ───────────────────
@@ -879,6 +937,11 @@ function applyParams(values) {
   });
   BENEFIT_IDS.forEach(id => {
     if (values[id] !== undefined) document.getElementById(id).value = values[id];
+  });
+  // rebuild data-ratio from loaded fleet + counts so auto-scale keeps working
+  const fleetVal = +document.getElementById('b_fleet').value || 1;
+  document.querySelectorAll('.bp-cnt').forEach(inp => {
+    inp.dataset.ratio = (+inp.value || 0) / fleetVal;
   });
   syncBurnFromCosts();
 }
