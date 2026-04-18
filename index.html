@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TreximAI — Фінансова Модель</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D2137;--navy2:#162C42;--navy3:#1E3A52;
+  --accent:#2EA8D5;--green:#27AE60;--red:#E74C3C;--amber:#F39C12;
+  --t1:#1A1A2E;--t2:#4A5568;--t3:#718096;
+  --border:#E2E8F0;--bg:#F7F9FC;--white:#fff;
+  --r:8px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t1);font-size:14px;line-height:1.5}
+a{color:var(--accent)}
+
+/* PRINT */
+@media print{
+  @page{size:A4;margin:10mm}
+  .no-print{display:none!important}
+  body{background:#fff;font-size:10.5px;color:#000}
+  .container{max-width:100%;padding:0}
+  .header{background:#0D2137!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:14px 10mm;margin-bottom:12px}
+  .header h1{font-size:18px}
+  .card{break-inside:avoid;page-break-inside:avoid;padding:10px;box-shadow:none}
+  .section{page-break-inside:avoid;margin-bottom:12px;padding:0 10mm}
+  .section-title{font-size:12px;margin-bottom:8px;padding-bottom:5px}
+  .kpi__value{font-size:18px}
+  .kpi__label{font-size:10px}
+  .chart-wrap{height:240px;page-break-inside:avoid}
+  table{font-size:9.5px}
+  th,td{padding:4px 6px}
+  tr.breakeven td{background:#D5F5E3!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .scenario--opt{background:#EBF8F1!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .scenario--pes{background:#FEF3E2!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .cost-total,th,.card--navy,.card--accent{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .print-only{display:block!important}
+  .page-break{page-break-before:always}
+  a{color:#000;text-decoration:none}
+}
+.print-only{display:none}
+
+/* PRINT PARAMS SUMMARY */
+.print-params{background:#F8FAFC;border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.print-params h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-bottom:8px}
+.print-params-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 18px;font-size:11px}
+.print-params-grid div{display:flex;justify-content:space-between;border-bottom:1px dotted #E2E8F0;padding:2px 0}
+.print-params-grid b{color:var(--navy)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(13,33,55,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:#fff;border-radius:12px;max-width:640px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-head h3{font-size:16px;font-weight:700;color:var(--navy)}
+.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--t3);line-height:1;padding:0;width:28px;height:28px}
+.modal-close:hover{color:var(--red)}
+.modal-body{padding:18px 22px;overflow-y:auto;flex:1}
+.modal-foot{padding:12px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.version-list{display:flex;flex-direction:column;gap:8px}
+.version-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;transition:border-color .15s;gap:10px}
+.version-item:hover{border-color:var(--accent)}
+.version-info{flex:1;min-width:0}
+.version-name{font-weight:600;font-size:14px;color:var(--t1);margin-bottom:2px;word-break:break-word}
+.version-date{font-size:11px;color:var(--t3)}
+.version-actions{display:flex;gap:6px;flex-shrink:0}
+.btn{padding:7px 14px;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;border:1px solid transparent;background:#fff;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{opacity:.9}
+.btn-ghost{background:#fff;color:var(--t2);border-color:var(--border)}
+.btn-ghost:hover{border-color:var(--t3);color:var(--t1)}
+.btn-danger{background:#fff;color:var(--red);border-color:#FBD3D0}
+.btn-danger:hover{background:var(--red);color:#fff}
+.empty-state{text-align:center;padding:30px 10px;color:var(--t3);font-size:13px}
+.save-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;outline:none;margin-bottom:10px;font-family:inherit}
+.save-input:focus{border-color:var(--accent)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;padding:12px 18px;border-radius:8px;font-size:13px;z-index:1100;opacity:0;transform:translateY(10px);transition:all .25s;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:340px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tb-btn{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
+.tb-btn:hover{opacity:.9}
+.tb-btn.secondary{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25)}
+.tb-btn.secondary:hover{background:rgba(255,255,255,.22)}
+
+/* LAYOUT */
+.container{max-width:1200px;margin:0 auto;padding:0 20px}
+.header{background:var(--navy);color:#fff;padding:28px 0;margin-bottom:24px}
+.header__inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.header h1{font-size:22px;font-weight:700;letter-spacing:.02em}
+.header h1 span{color:var(--accent)}
+.header__meta{font-size:12px;color:rgba(255,255,255,.55);margin-top:4px}
+.print-btn{background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:600}
+.print-btn:hover{opacity:.9}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.card--navy{background:var(--navy);border-color:var(--navy);color:#fff}
+.card--accent{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-color:var(--navy)}
+.section{margin-bottom:24px}
+.section-title{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px}
+
+/* KPI CARDS */
+.kpi{text-align:center}
+.kpi__label{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.kpi__value{font-size:26px;font-weight:700;line-height:1.1}
+.kpi__sub{font-size:11px;color:var(--t3);margin-top:3px}
+.kpi__value.green{color:var(--green)}
+.kpi__value.amber{color:var(--amber)}
+.kpi__value.red{color:var(--red)}
+.kpi__value.navy{color:var(--navy)}
+
+/* PARAMS */
+.params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.param-group label{display:block;font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.param-group input[type=number],.param-group select{
+  width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;
+  font-size:14px;font-weight:600;color:var(--t1);background:#fff;
+  outline:none;transition:border-color .2s;
+}
+.param-group input:focus,.param-group select:focus{border-color:var(--accent)}
+.param-hint{font-size:11px;color:var(--t3);margin-top:3px}
+
+/* SCENARIOS */
+.scenarios{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.scenario{border-radius:var(--r);padding:20px;border:2px solid transparent}
+.scenario--opt{background:#EBF8F1;border-color:#27AE60}
+.scenario--pes{background:#FEF3E2;border-color:#F39C12}
+.scenario-title{font-weight:700;font-size:14px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.scenario-title .badge{font-size:11px;padding:2px 8px;border-radius:12px;font-weight:700}
+.badge-green{background:var(--green);color:#fff}
+.badge-amber{background:var(--amber);color:#fff}
+.scenario-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.07);font-size:13px}
+.scenario-row:last-child{border:none;font-weight:700;padding-top:8px;margin-top:4px;font-size:14px}
+.val-good{color:var(--green);font-weight:700}
+.val-warn{color:var(--amber);font-weight:700}
+.val-bad{color:var(--red);font-weight:700}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{background:var(--navy);color:#fff;padding:9px 12px;text-align:right;font-weight:600;font-size:11px;letter-spacing:.04em;white-space:nowrap}
+th:first-child,th:nth-child(2){text-align:left}
+td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+td:first-child,td:nth-child(2){text-align:left;color:var(--t2);font-size:12px}
+tr:nth-child(even){background:#F8FAFC}
+tr.pre-mvp{opacity:.65}
+tr.breakeven td{background:#D5F5E3!important;font-weight:700}
+tr.breakeven td:first-child::before{content:"⭐ "}
+.neg{color:var(--red)}
+.pos{color:var(--green)}
+.zero{color:var(--t3)}
+
+/* CHART */
+.chart-wrap{position:relative;height:320px}
+
+/* COSTS */
+.costs-list{display:flex;flex-direction:column;gap:8px}
+.cost-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#F8FAFC;border-radius:6px;border-left:3px solid var(--accent)}
+.cost-row .name{font-size:13px;color:var(--t1)}
+.cost-row .amt{font-size:14px;font-weight:700;color:var(--navy)}
+.cost-total{display:flex;justify-content:space-between;padding:10px 12px;background:var(--navy);color:#fff;border-radius:6px;margin-top:4px}
+.cost-total .name{font-weight:600}
+.cost-total .amt{font-weight:700;font-size:16px;color:var(--accent)}
+
+/* REVENUE PER CLIENT */
+.rev-breakdown{background:#EEF7FF;border-radius:6px;padding:14px;margin-top:12px}
+.rev-breakdown-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.rev-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+.rev-total{border-top:1px solid #BEE3F8;margin-top:6px;padding-top:6px;font-weight:700;display:flex;justify-content:space-between}
+
+/* FORMULA */
+.formula{font-size:11px;color:var(--t3);background:#F8FAFC;padding:8px 12px;border-radius:6px;margin-top:8px;font-family:monospace}
+
+/* FOOTER */
+.doc-footer{margin-top:32px;padding:16px 0;border-top:1px solid var(--border);font-size:11px;color:var(--t3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .grid-4,.grid-3{grid-template-columns:1fr 1fr}
+  .scenarios{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .grid-2,.grid-4,.grid-3{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="container header__inner">
+    <div>
+      <h1>Trexim<span>AI</span> — Фінансова Модель</h1>
+      <div class="header__meta">Конфіденційно · Версія: <span id="docDate"></span> · Підготовлено: Тарас Смалюх, CEO</div>
+    </div>
+    <div class="toolbar no-print">
+      <button class="tb-btn" onclick="openSaveModal()">💾 Зберегти</button>
+      <button class="tb-btn secondary" onclick="openVersionsModal()">📂 Версії</button>
+      <button class="tb-btn secondary" onclick="window.print()">🖨 Друк / PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- PARAMS -->
+  <div class="section card no-print">
+    <div class="section-title">⚙️ Параметри моделі — змінюйте і таблиця перерахується автоматично</div>
+    <div class="params-grid">
+      <div class="param-group">
+        <label>Курс USD/UAH</label>
+        <input type="number" id="p_rate" value="44" min="30" max="70" step="0.5" />
+        <div class="param-hint">Поточний: 44 грн/дол</div>
+      </div>
+      <div class="param-group">
+        <label>Комісія з рейсу (%)</label>
+        <input type="number" id="p_commission" value="5" min="1" max="15" step="0.5" />
+        <div class="param-hint">Базова: 5% від вартості рейсу</div>
+      </div>
+      <div class="param-group">
+        <label>Середній рейс (₴)</label>
+        <input type="number" id="p_shipment_val" value="15000" min="1000" max="200000" step="1000" />
+        <div class="param-hint">Середня вартість одного рейсу</div>
+      </div>
+      <div class="param-group">
+        <label>Рейсів/клієнт/міс</label>
+        <input type="number" id="p_shipments_pm" value="20" min="1" max="200" step="1" />
+        <div class="param-hint">Середня кількість рейсів</div>
+      </div>
+      <div class="param-group">
+        <label>Підписка/клієнт (₴/міс)</label>
+        <input type="number" id="p_subscription" value="3000" min="0" max="50000" step="500" />
+        <div class="param-hint">Середній тариф (Starter–Standard)</div>
+      </div>
+      <div class="param-group">
+        <label>Щомісячний burn ($)</label>
+        <input type="number" id="p_burn" value="20000" min="5000" max="100000" step="500" />
+        <div class="param-hint">Команда + інфра + маркетинг</div>
+      </div>
+      <div class="param-group">
+        <label>МВП — оптиміст</label>
+        <select id="p_mvp_opt">
+          <option value="4">Червень 2026 (міс. 4)</option>
+          <option value="5">Липень 2026 (міс. 5)</option>
+          <option value="3">Травень 2026 (міс. 3)</option>
+        </select>
+        <div class="param-hint">Місяць релізу МВП (оптим.)</div>
+      </div>
+      <div class="param-group">
+        <label>МВП — песиміст</label>
+        <select id="p_mvp_pes">
+          <option value="7">Вересень 2026 (міс. 7)</option>
+          <option value="6">Серпень 2026 (міс. 6)</option>
+          <option value="8">Жовтень 2026 (міс. 8)</option>
+        </select>
+        <div class="param-hint">Місяць релізу МВП (песим.)</div>
+      </div>
+      <div class="param-group">
+        <label>Нових клієнтів у M+1</label>
+        <input type="number" id="p_clients_start" value="5" min="1" max="50" step="1" />
+        <div class="param-hint">Перший місяць після МВП</div>
+      </div>
+      <div class="param-group">
+        <label>Коефіцієнт росту / міс</label>
+        <input type="number" id="p_clients_multiplier" value="2.0" min="1.05" max="5.0" step="0.05" />
+        <div class="param-hint">Геометрична прогресія: ×2 = подвоєння щомісяця</div>
+      </div>
+      <div class="param-group">
+        <label>Ціль — компаній (Q1 2027)</label>
+        <input type="number" id="p_target" value="5000" min="100" max="100000" step="100" />
+        <div class="param-hint">Цільова кількість активних компаній</div>
+      </div>
+      <div class="param-group">
+        <label>Конверсія в платних (%)</label>
+        <input type="number" id="p_conversion" value="100" min="1" max="100" step="1" />
+        <div class="param-hint">100% = всі платять; 60% = freemium модель</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINT-ONLY PARAMS SUMMARY -->
+  <div class="section print-only">
+    <div class="print-params">
+      <h4>⚙️ Параметри моделі</h4>
+      <div class="print-params-grid" id="print_params_grid"></div>
+    </div>
+  </div>
+
+  <!-- COSTS BREAKDOWN -->
+  <div class="section">
+    <div class="section-title">💰 Структура витрат (місячний burn)</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="costs-list">
+          <div class="cost-row"><span class="name">CEO (Тарас Смалюх)</span><span class="amt">$3,000</span></div>
+          <div class="cost-row"><span class="name">Помічниця</span><span class="amt">$800</span></div>
+          <div class="cost-row"><span class="name">2 Дизайнери</span><span class="amt">$2,500</span></div>
+          <div class="cost-row"><span class="name">2 Розробники</span><span class="amt">$4,500</span></div>
+          <div class="cost-row"><span class="name">BA + PM</span><span class="amt">$3,000</span></div>
+          <div class="cost-row" style="border-left-color:#6C757D"><span class="name">Архітектура + інфраструктура</span><span class="amt">$500</span></div>
+          <div class="cost-row" style="border-left-color:#6C757D"><span class="name">Маркетинг + конференції</span><span class="amt">$2,200</span></div>
+        </div>
+        <div class="cost-total" style="margin-top:12px">
+          <span class="name">Разом на місяць</span>
+          <span class="amt" id="burn_display">$20,000</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:10px">Дохід на 1 клієнта/міс</div>
+        <div class="rev-breakdown">
+          <div class="rev-breakdown-title">Розрахунок виручки (поточні параметри)</div>
+          <div class="rev-row"><span>Підписка</span><span id="r_sub_uah">₴3,000</span></div>
+          <div class="rev-row"><span>Комісія з рейсів</span><span id="r_comm_uah">₴15,000</span></div>
+          <div class="rev-total">
+            <span>Разом / клієнт</span>
+            <span id="r_total_uah">₴18,000</span>
+          </div>
+          <div class="rev-total" style="margin-top:8px;padding-top:8px;border-top:2px solid var(--accent)">
+            <span>≈ в доларах</span>
+            <span id="r_total_usd" style="color:var(--navy);font-size:16px">$409</span>
+          </div>
+        </div>
+        <div class="formula" id="formula_display">
+          Комісія = 20 рейсів × ₴15,000 × 5% = ₴15,000
+        </div>
+        <div style="margin-top:12px;padding:10px 14px;background:#EEF7FF;border-radius:6px">
+          <div style="font-size:11px;color:var(--t3);text-transform:uppercase;font-weight:700;margin-bottom:6px">Клієнтів для break-even</div>
+          <div style="font-size:24px;font-weight:700;color:var(--navy)" id="clients_needed">—</div>
+          <div style="font-size:11px;color:var(--t3)" id="clients_needed_hint">при поточних параметрах</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="section">
+    <div class="section-title">📊 Ключові показники</div>
+    <div class="grid-4">
+      <div class="card kpi">
+        <div class="kpi__label">Burn / міс</div>
+        <div class="kpi__value navy" id="kpi_burn">$20,000</div>
+        <div class="kpi__sub">Фіксовані витрати</div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi__label">Дохід/клієнт</div>
+        <div class="kpi__value navy" id="kpi_rev_client">—</div>
+        <div class="kpi__sub">середній / місяць</div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi__label">Break-even (оптим.)</div>
+        <div class="kpi__value green" id="kpi_be_opt">—</div>
+        <div class="kpi__sub" id="kpi_be_opt_date">клієнтів / дата</div>
+      </div>
+      <div class="card kpi">
+        <div class="kpi__label">Break-even (песим.)</div>
+        <div class="kpi__value amber" id="kpi_be_pes">—</div>
+        <div class="kpi__sub" id="kpi_be_pes_date">клієнтів / дата</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIOS -->
+  <div class="section">
+    <div class="section-title">🎯 Сценарії виходу на окупність</div>
+    <div class="scenarios">
+      <div class="scenario scenario--opt">
+        <div class="scenario-title">🟢 Оптимістичний <span class="badge badge-green">Optimistic</span></div>
+        <div id="scenario_opt_rows"></div>
+      </div>
+      <div class="scenario scenario--pes">
+        <div class="scenario-title">🟡 Песимістичний <span class="badge badge-amber">Pessimistic</span></div>
+        <div id="scenario_pes_rows"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="section card">
+    <div class="section-title">📈 Динаміка Revenue vs Burn (оптимістичний сценарій)</div>
+    <div class="chart-wrap">
+      <canvas id="mainChart"></canvas>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="section card">
+    <div class="section-title">📋 Помісячний прогноз — Оптимістичний сценарій</div>
+    <div class="table-wrap">
+      <table id="table_opt"></table>
+    </div>
+  </div>
+
+  <div class="section card">
+    <div class="section-title">📋 Помісячний прогноз — Песимістичний сценарій</div>
+    <div class="table-wrap">
+      <table id="table_pes"></table>
+    </div>
+  </div>
+
+  <!-- MODAL: SAVE -->
+  <div class="modal-overlay no-print" id="modalSave">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>💾 Зберегти версію</h3>
+        <button class="modal-close" onclick="closeModal('modalSave')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label style="display:block;font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Назва версії</label>
+        <input type="text" class="save-input" id="saveNameInput" placeholder="Наприклад: Базовий сценарій" maxlength="80" />
+        <div style="font-size:11px;color:var(--t3)">Зберігаються всі введені параметри моделі. Дані зберігаються у браузері (localStorage).</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeModal('modalSave')">Скасувати</button>
+        <button class="btn btn-primary" onclick="saveVersion()">Зберегти</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VERSIONS -->
+  <div class="modal-overlay no-print" id="modalVersions">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>📂 Збережені версії</h3>
+        <button class="modal-close" onclick="closeModal('modalVersions')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="versionsList" class="version-list"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeModal('modalVersions')">Закрити</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <span>TreximAI · Конфіденційно · Підготовлено: <span id="footDate"></span></span>
+    <span>Модель є прогнозною та ґрунтується на поточних допущеннях. Фактичні результати можуть відрізнятись.</span>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ── MONTHS ────────────────────────────────────────────────
+const MONTH_START = new Date(2026, 2, 1); // March 2026 = month 0
+const MONTH_NAMES_UK = ['Січень','Лютий','Березень','Квітень','Травень','Червень',
+  'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+const TOTAL_MONTHS = 20;
+
+function monthLabel(offset) {
+  const d = new Date(MONTH_START);
+  d.setMonth(d.getMonth() + offset);
+  return MONTH_NAMES_UK[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+// ── FORMAT ────────────────────────────────────────────────
+function fmt(n, prefix='$') {
+  return prefix + Math.abs(Math.round(n)).toLocaleString('uk-UA');
+}
+function fmtSign(n) {
+  const s = Math.abs(Math.round(n)).toLocaleString('uk-UA');
+  return (n < 0 ? '−$' : '+$') + s;
+}
+
+// ── PARAMS ────────────────────────────────────────────────
+function getParams() {
+  return {
+    rate:          +document.getElementById('p_rate').value,
+    commission:    +document.getElementById('p_commission').value / 100,
+    shipmentVal:   +document.getElementById('p_shipment_val').value,
+    shipmentspm:   +document.getElementById('p_shipments_pm').value,
+    subscription:  +document.getElementById('p_subscription').value,
+    burn:          +document.getElementById('p_burn').value,
+    mvpOpt:        +document.getElementById('p_mvp_opt').value,
+    mvpPes:        +document.getElementById('p_mvp_pes').value,
+    clientsStart:      +document.getElementById('p_clients_start').value,
+    clientsMultiplier: +document.getElementById('p_clients_multiplier').value,
+    target:            +document.getElementById('p_target').value,
+    conversion:        +document.getElementById('p_conversion').value / 100,
+  };
+}
+
+// ── REVENUE PER CLIENT ─────────────────────────────────────
+function revenuePerClient(p) {
+  const commUah = p.shipmentspm * p.shipmentVal * p.commission;
+  const subUah  = p.subscription;
+  const totalUah = commUah + subUah;
+  return { commUah, subUah, totalUah, totalUsd: totalUah / p.rate };
+}
+
+// ── PROJECTION ────────────────────────────────────────────
+function buildProjection(p, mvpMonth) {
+  const rows = [];
+  let cumRegistered = 0;
+  let cumCash = 0;
+  let stepsSinceMvp = -1;
+  let beMonth = null;
+  let targetMonth = null;
+
+  for (let m = 0; m < TOTAL_MONTHS; m++) {
+    const preMvp = m < mvpMonth;
+    let newThisMonth = 0;
+
+    if (!preMvp) {
+      stepsSinceMvp++;
+      // Geometric: new clients in step n = start × multiplier^n
+      newThisMonth = Math.round(p.clientsStart * Math.pow(p.clientsMultiplier, stepsSinceMvp));
+      cumRegistered += newThisMonth;
+    }
+
+    const payingClients = Math.round(cumRegistered * p.conversion);
+    const rev  = preMvp ? 0 : payingClients * revenuePerClient(p).totalUsd;
+    const burn = p.burn;
+    const netCF = rev - burn;
+    cumCash += netCF;
+
+    if (beMonth === null && netCF >= 0) beMonth = m;
+    if (targetMonth === null && cumRegistered >= p.target) targetMonth = m;
+
+    rows.push({
+      m, preMvp, cumRegistered, payingClients,
+      newClients: preMvp ? 0 : newThisMonth,
+      rev, burn, netCF, cumCash, label: monthLabel(m)
+    });
+  }
+  return { rows, beMonth, targetMonth };
+}
+
+// ── RENDER TABLE ──────────────────────────────────────────
+function renderTable(tableId, rows, beMonth, targetMonth) {
+  const el = document.getElementById(tableId);
+  const head = `<thead><tr>
+    <th style="text-align:left">Місяць</th>
+    <th style="text-align:left">Статус</th>
+    <th>Нових</th>
+    <th>Зареєстр.</th>
+    <th>Платних</th>
+    <th>Виручка ($)</th>
+    <th>Витрати ($)</th>
+    <th>CF / міс</th>
+    <th>Cum. CF</th>
+  </tr></thead>`;
+
+  let body = '<tbody>';
+  rows.forEach(r => {
+    const isBe     = r.m === beMonth;
+    const isTarget = r.m === targetMonth;
+    let cls = '';
+    if (isBe) cls = 'breakeven';
+    else if (isTarget) cls = 'breakeven';
+    else if (r.preMvp) cls = 'pre-mvp';
+
+    let status = r.preMvp ? '🔧 Pre-MVP'
+      : isBe   ? '✅ Break-even'
+      : isTarget ? '🎯 Ціль досягнута'
+      : (beMonth === null || r.m < beMonth) ? '⏳ Scaling' : '📈 Profit';
+
+    const cfClass  = r.netCF  > 0 ? 'pos' : r.netCF  < 0 ? 'neg' : 'zero';
+    const cumClass = r.cumCash > 0 ? 'pos' : 'neg';
+    const newFmt   = r.preMvp ? '—' : '+' + r.newClients.toLocaleString('uk-UA');
+    const regFmt   = r.preMvp ? '—' : r.cumRegistered.toLocaleString('uk-UA');
+    const payFmt   = r.preMvp ? '—' : r.payingClients.toLocaleString('uk-UA');
+
+    body += `<tr class="${cls}">
+      <td>${r.label}</td>
+      <td>${status}</td>
+      <td>${newFmt}</td>
+      <td>${regFmt}</td>
+      <td>${payFmt}</td>
+      <td>${r.rev > 0 ? fmt(r.rev) : '—'}</td>
+      <td>${fmt(r.burn)}</td>
+      <td class="${cfClass}">${r.preMvp ? '−'+fmt(r.burn) : fmtSign(r.netCF)}</td>
+      <td class="${cumClass}">${fmtSign(r.cumCash)}</td>
+    </tr>`;
+  });
+  body += '</tbody>';
+  el.innerHTML = head + body;
+}
+
+// ── SCENARIO BLOCK ─────────────────────────────────────────
+function renderScenario(containerId, p, mvpMonth, label) {
+  const { rows, beMonth, targetMonth } = buildProjection(p, mvpMonth);
+  const beRow     = beMonth     !== null ? rows[beMonth]     : null;
+  const targetRow = targetMonth !== null ? rows[targetMonth] : null;
+  const totalInvest = rows.reduce((s,r) => s + (r.netCF < 0 ? -r.netCF : 0), 0);
+
+  const monthsToBeFromMvp = beMonth !== null ? beMonth - mvpMonth : null;
+
+  const rows_html = [
+    ['📅 Реліз МВП', monthLabel(mvpMonth)],
+    ['⏱ Місяців до МВП', mvpMonth + ' міс'],
+    ['📈 Break-even (місяч. CF ≥ 0)', beMonth !== null ? monthLabel(beMonth) : '> 20 міс'],
+    ['⏱ Місяців після МВП до BE', monthsToBeFromMvp !== null ? monthsToBeFromMvp + ' міс' : '—'],
+    ['👥 Платних при break-even', beRow ? beRow.payingClients.toLocaleString('uk-UA') + ' компаній' : '—'],
+    ['💰 MRR при break-even', beRow ? fmt(beRow.rev) : '—'],
+    ['🎯 Ціль ' + p.target.toLocaleString('uk-UA') + ' компаній', targetMonth !== null ? monthLabel(targetMonth) : '> 20 міс'],
+    ['📊 MRR при досягненні цілі', targetRow ? fmt(targetRow.rev) : '—'],
+    ['💸 Загальні інвестиції до BE', fmt(totalInvest)],
+  ].map(([k,v],i) => {
+    const isLast = i === 8;
+    return `<div class="scenario-row" style="${isLast?'font-weight:700':''}"><span>${k}</span><span>${v}</span></div>`;
+  }).join('');
+
+  document.getElementById(containerId).innerHTML = rows_html;
+  return { rows, beMonth, targetMonth };
+}
+
+// ── CHART ──────────────────────────────────────────────────
+let chartInstance = null;
+function renderChart(rows, targetClients) {
+  const shortLabels = rows.map(r => {
+    const d = new Date(MONTH_START); d.setMonth(d.getMonth()+r.m);
+    return MONTH_NAMES_UK[d.getMonth()].slice(0,3)+' '+d.getFullYear().toString().slice(2);
+  });
+  const revData      = rows.map(r => Math.round(r.rev));
+  const burnData     = rows.map(r => r.burn);
+  const cumData      = rows.map(r => Math.round(r.cumCash));
+  const clientsData  = rows.map(r => r.cumRegistered);
+
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(document.getElementById('mainChart'), {
+    data: {
+      labels: shortLabels,
+      datasets: [
+        {
+          type: 'bar', label: 'Виручка ($)', data: revData,
+          backgroundColor: 'rgba(39,174,96,.65)', borderColor: '#27AE60', borderWidth: 1, yAxisID: 'y',
+        },
+        {
+          type: 'line', label: 'Витрати ($)', data: burnData,
+          borderColor: '#E74C3C', backgroundColor: 'transparent', borderWidth: 2,
+          borderDash: [5,4], pointRadius: 0, yAxisID: 'y',
+        },
+        {
+          type: 'line', label: 'Накопич. Cash Flow ($)', data: cumData,
+          borderColor: '#2EA8D5', backgroundColor: 'rgba(46,168,213,.08)',
+          borderWidth: 2, fill: true, pointRadius: 2, yAxisID: 'y',
+        },
+        {
+          type: 'line', label: 'Компанії (зареєстр.)', data: clientsData,
+          borderColor: '#F39C12', backgroundColor: 'transparent',
+          borderWidth: 2, pointRadius: 3, yAxisID: 'y2', borderDash: [3,2],
+        },
+        {
+          type: 'line', label: 'Ціль: ' + targetClients.toLocaleString('uk-UA') + ' компаній',
+          data: rows.map(() => targetClients),
+          borderColor: 'rgba(243,156,18,.35)', backgroundColor: 'transparent',
+          borderWidth: 1, borderDash: [8,4], pointRadius: 0, yAxisID: 'y2',
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { mode: 'index', intersect: false },
+      },
+      scales: {
+        y:  { position: 'left',  beginAtZero: true, grid: { color: '#E2E8F0' }, title: { display: true, text: 'Cash Flow / Revenue ($)' } },
+        y2: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Кількість компаній' } },
+      }
+    }
+  });
+}
+
+// ── MAIN RECALC ────────────────────────────────────────────
+function recalc() {
+  const p = getParams();
+  const rev = revenuePerClient(p);
+  const needed = Math.ceil(p.burn / rev.totalUsd);
+
+  // update revenue per client display
+  document.getElementById('r_sub_uah').textContent   = '₴' + p.subscription.toLocaleString('uk-UA');
+  document.getElementById('r_comm_uah').textContent  = '₴' + Math.round(rev.commUah).toLocaleString('uk-UA');
+  document.getElementById('r_total_uah').textContent = '₴' + Math.round(rev.totalUah).toLocaleString('uk-UA');
+  document.getElementById('r_total_usd').textContent = '$' + Math.round(rev.totalUsd).toLocaleString('uk-UA');
+  document.getElementById('formula_display').textContent =
+    `Комісія = ${p.shipmentspm} рейсів × ₴${p.shipmentVal.toLocaleString('uk-UA')} × ${(p.commission*100).toFixed(1)}% = ₴${Math.round(rev.commUah).toLocaleString('uk-UA')}`;
+  document.getElementById('clients_needed').textContent = needed;
+  document.getElementById('clients_needed_hint').textContent = `${fmt(p.burn)} ÷ ${fmt(rev.totalUsd)} / клієнт`;
+
+  // KPIs
+  document.getElementById('kpi_burn').textContent = fmt(p.burn);
+  document.getElementById('kpi_rev_client').textContent = fmt(rev.totalUsd);
+  document.getElementById('burn_display').textContent = fmt(p.burn);
+
+  // scenarios
+  const optData = renderScenario('scenario_opt_rows', p, p.mvpOpt, 'Оптимістичний');
+  const pesData = renderScenario('scenario_pes_rows', p, p.mvpPes, 'Песимістичний');
+
+  // be dates for KPI
+  const beOptLabel = optData.beMonth !== null ? monthLabel(optData.beMonth) : '>20 міс';
+  const bePesLabel = pesData.beMonth !== null ? monthLabel(pesData.beMonth) : '>20 міс';
+  const beOptClients = optData.beMonth !== null ? optData.rows[optData.beMonth].cumClients + ' кл.' : '—';
+  const bePesClients = pesData.beMonth !== null ? pesData.rows[pesData.beMonth].cumClients + ' кл.' : '—';
+  document.getElementById('kpi_be_opt').textContent = beOptLabel;
+  document.getElementById('kpi_be_opt_date').textContent = beOptClients;
+  document.getElementById('kpi_be_pes').textContent = bePesLabel;
+  document.getElementById('kpi_be_pes_date').textContent = bePesClients;
+
+  // tables
+  renderTable('table_opt', optData.rows, optData.beMonth, optData.targetMonth);
+  renderTable('table_pes', pesData.rows, pesData.beMonth, pesData.targetMonth);
+
+  // chart (optimistic)
+  renderChart(optData.rows, p.target);
+}
+
+// ── INIT ───────────────────────────────────────────────────
+const now = new Date();
+const dateStr = now.toLocaleDateString('uk-UA', { day:'2-digit', month:'long', year:'numeric' });
+document.getElementById('docDate').textContent = dateStr;
+document.getElementById('footDate').textContent = dateStr;
+
+document.querySelectorAll('.param-group input, .param-group select').forEach(el => {
+  el.addEventListener('input', recalc);
+  el.addEventListener('change', recalc);
+});
+
+// ── PARAM METADATA (for print summary + save/load) ──────
+const PARAM_IDS = ['p_rate','p_commission','p_shipment_val','p_shipments_pm','p_subscription','p_burn','p_mvp_opt','p_mvp_pes','p_clients_start','p_clients_multiplier','p_target','p_conversion'];
+const PARAM_LABELS = {
+  p_rate:'Курс USD/UAH',
+  p_commission:'Комісія (%)',
+  p_shipment_val:'Середній рейс (₴)',
+  p_shipments_pm:'Рейсів/клієнт/міс',
+  p_subscription:'Підписка (₴/міс)',
+  p_burn:'Burn / міс ($)',
+  p_mvp_opt:'МВП — оптиміст (міс)',
+  p_mvp_pes:'МВП — песиміст (міс)',
+  p_clients_start:'Клієнтів у M+1',
+  p_clients_multiplier:'Ріст / міс',
+  p_target:'Ціль — компаній',
+  p_conversion:'Конверсія (%)',
+};
+
+function collectParams() {
+  const out = {};
+  PARAM_IDS.forEach(id => { out[id] = document.getElementById(id).value; });
+  return out;
+}
+
+function applyParams(values) {
+  PARAM_IDS.forEach(id => {
+    if (values[id] !== undefined) document.getElementById(id).value = values[id];
+  });
+  recalc();
+  renderPrintParams();
+}
+
+function renderPrintParams() {
+  const grid = document.getElementById('print_params_grid');
+  if (!grid) return;
+  const vals = collectParams();
+  grid.innerHTML = PARAM_IDS.map(id => {
+    const el = document.getElementById(id);
+    let display = vals[id];
+    if (el.tagName === 'SELECT') {
+      const opt = el.options[el.selectedIndex];
+      display = opt ? opt.text : vals[id];
+    }
+    return `<div><span>${PARAM_LABELS[id]}</span><b>${display}</b></div>`;
+  }).join('');
+}
+
+// ── LOCALSTORAGE VERSIONS ───────────────────────────────
+const STORAGE_KEY = 'trexim_fin_versions_v1';
+
+function readVersions() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+function writeVersions(arr) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(window.__toastT);
+  window.__toastT = setTimeout(() => { t.className = 'toast'; }, 2400);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function openSaveModal() {
+  const now = new Date();
+  const def = 'Версія ' + now.toLocaleDateString('uk-UA') + ' ' + now.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('saveNameInput').value = def;
+  openModal('modalSave');
+  setTimeout(() => document.getElementById('saveNameInput').select(), 50);
+}
+
+function saveVersion() {
+  const name = (document.getElementById('saveNameInput').value || '').trim();
+  if (!name) { toast('Вкажіть назву версії', 'error'); return; }
+  const versions = readVersions();
+  versions.unshift({
+    id: 'v_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    name,
+    savedAt: new Date().toISOString(),
+    params: collectParams(),
+  });
+  try {
+    writeVersions(versions);
+    closeModal('modalSave');
+    toast('✅ Версію збережено: ' + name, 'success');
+  } catch(e) {
+    toast('Помилка збереження: ' + e.message, 'error');
+  }
+}
+
+function openVersionsModal() {
+  renderVersionsList();
+  openModal('modalVersions');
+}
+
+function renderVersionsList() {
+  const list = document.getElementById('versionsList');
+  const versions = readVersions();
+  if (!versions.length) {
+    list.innerHTML = '<div class="empty-state">Поки що немає збережених версій.<br>Натисніть <b>💾 Зберегти</b>, щоб створити першу.</div>';
+    return;
+  }
+  list.innerHTML = versions.map(v => {
+    const d = new Date(v.savedAt);
+    const dateStr = d.toLocaleDateString('uk-UA') + ' · ' + d.toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});
+    const safeName = String(v.name).replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+    return `<div class="version-item">
+      <div class="version-info">
+        <div class="version-name">${safeName}</div>
+        <div class="version-date">${dateStr}</div>
+      </div>
+      <div class="version-actions">
+        <button class="btn btn-primary" onclick="loadVersion('${v.id}')">Відкрити</button>
+        <button class="btn btn-danger" onclick="deleteVersion('${v.id}')">Видалити</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function loadVersion(id) {
+  const versions = readVersions();
+  const v = versions.find(x => x.id === id);
+  if (!v) { toast('Версію не знайдено', 'error'); return; }
+  applyParams(v.params || {});
+  closeModal('modalVersions');
+  toast('📂 Завантажено: ' + v.name, 'success');
+}
+
+function deleteVersion(id) {
+  const versions = readVersions();
+  const v = versions.find(x => x.id === id);
+  if (!v) return;
+  if (!confirm('Видалити версію "' + v.name + '"?')) return;
+  writeVersions(versions.filter(x => x.id !== id));
+  renderVersionsList();
+  toast('🗑 Версію видалено', 'success');
+}
+
+// Close modals on overlay click / Esc
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('active'); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(o => o.classList.remove('active'));
+});
+
+// Keep print summary in sync with params
+document.querySelectorAll('.param-group input, .param-group select').forEach(el => {
+  el.addEventListener('input', renderPrintParams);
+  el.addEventListener('change', renderPrintParams);
+});
+
+// Update print summary right before printing
+window.addEventListener('beforeprint', renderPrintParams);
+
+recalc();
+renderPrintParams();
+</script>
+</body>
+</html>
