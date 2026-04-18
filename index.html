@@ -444,9 +444,9 @@ tr.breakeven td:first-child::before{content:"⭐ "}
         <div class="kpi__sub">Фіксовані витрати</div>
       </div>
       <div class="card kpi">
-        <div class="kpi__label">Дохід/клієнт</div>
-        <div class="kpi__value navy" id="kpi_rev_client">—</div>
-        <div class="kpi__sub">середній / місяць</div>
+        <div class="kpi__label">Економія клієнта</div>
+        <div class="kpi__value green" id="kpi_savings">—</div>
+        <div class="kpi__sub">на персоналі / місяць</div>
       </div>
       <div class="card kpi">
         <div class="kpi__label">🚀 Запуск МВП</div>
@@ -773,11 +773,11 @@ function recalc() {
   const rev = revenuePerClient(p);
 
   // Benefit block
-  updateBenefit(p, rev);
+  const benefit = updateBenefit(p, rev);
 
   // KPIs
   document.getElementById('kpi_burn').textContent = fmt(p.burn);
-  document.getElementById('kpi_rev_client').textContent = fmt(rev.totalUsd);
+  document.getElementById('kpi_savings').textContent = fmt(benefit.benefitUsd);
   document.getElementById('burn_display').textContent = fmt(p.burn);
 
   // scenarios
@@ -863,6 +863,7 @@ function updateBenefit(p, rev) {
     roiEl.textContent = '—';
     payEl.textContent = '—';
   }
+  return { benefitUah, benefitUsd };
 }
 
 function rescaleStaffFromFleet() {
