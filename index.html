@@ -679,7 +679,6 @@ function renderScenario(containerId, pGlobal, overrides, mvpMonth, label) {
   const totalInvest = rows.reduce((s,r) => s + (r.netCF < 0 ? -r.netCF : 0), 0);
 
   const monthsToBeFromMvp = beMonth !== null ? beMonth - mvpMonth : null;
-  const targetNetCF = targetRow ? targetRow.rev - targetRow.burn : null;
 
   const rows_html = [
     ['📅 Реліз МВП', monthLabel(mvpMonth)],
@@ -688,8 +687,6 @@ function renderScenario(containerId, pGlobal, overrides, mvpMonth, label) {
     ['👥 Платних при break-even', beRow ? beRow.payingClients.toLocaleString('uk-UA') + ' компаній' : '—'],
     ['💰 MRR при break-even', beRow ? fmt(beRow.rev) : '—'],
     ['🎯 Ціль ' + p.target.toLocaleString('uk-UA') + ' компаній', targetMonth !== null ? monthLabel(targetMonth) : '> 20 міс'],
-    ['📊 MRR при досягненні цілі', targetRow ? fmt(targetRow.rev) : '—'],
-    ['💵 Чистий CF / міс на цілі', targetNetCF !== null ? fmtSign(targetNetCF) : '—'],
     ['💸 Загальні інвестиції до BE', fmt(totalInvest)],
   ].map(([k,v],i,arr) => {
     const isLast = i === arr.length - 1;
