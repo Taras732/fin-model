@@ -143,6 +143,10 @@ a{color:var(--accent)}
 .badge-amber{background:var(--amber);color:#fff}
 .scenario-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.07);font-size:13px}
 .scenario-row:last-child{border:none;font-weight:700;padding-top:8px;margin-top:4px;font-size:14px}
+.scenario-params{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 10px;margin:8px 0 12px;padding:10px;background:rgba(255,255,255,.65);border-radius:6px}
+.scenario-params label{display:flex;flex-direction:column;font-size:10.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;font-weight:700;gap:3px}
+.scenario-params input{padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-weight:600;color:var(--t1);background:#fff;text-align:right;font-family:inherit}
+.scenario-params input:focus{outline:none;border-color:var(--accent)}
 .val-good{color:var(--green);font-weight:700}
 .val-warn{color:var(--amber);font-weight:700}
 .val-bad{color:var(--red);font-weight:700}
@@ -288,43 +292,19 @@ tr.breakeven td:first-child::before{content:"⭐ "}
         <div class="param-hint">Команда + інфра + маркетинг</div>
       </div>
       <div class="param-group">
-        <label>МВП — оптиміст</label>
-        <select id="p_mvp_opt">
-          <option value="5" selected>Липень 2026 — демо</option>
-          <option value="4">Червень 2026 — демо</option>
-          <option value="6">Серпень 2026</option>
-          <option value="7">Вересень 2026 — МВП</option>
+        <label>Реліз МВП</label>
+        <select id="p_mvp">
+          <option value="5">Серпень 2026</option>
+          <option value="6">Вересень 2026</option>
+          <option value="7" selected>Жовтень 2026</option>
+          <option value="8">Листопад 2026</option>
         </select>
-        <div class="param-hint">Червень–липень: демо · Вересень+: МВП</div>
-      </div>
-      <div class="param-group">
-        <label>МВП — песиміст</label>
-        <select id="p_mvp_pes">
-          <option value="8" selected>Жовтень 2026 — МВП</option>
-          <option value="7">Вересень 2026 — МВП</option>
-          <option value="9">Листопад 2026</option>
-        </select>
-        <div class="param-hint">Вересень–жовтень: повний МВП</div>
-      </div>
-      <div class="param-group">
-        <label>Нових клієнтів у M+1</label>
-        <input type="number" id="p_clients_start" value="50" min="1" max="500" step="1" />
-        <div class="param-hint">Перший місяць після МВП</div>
-      </div>
-      <div class="param-group">
-        <label>Коефіцієнт росту / міс</label>
-        <input type="number" id="p_clients_multiplier" value="1.5" min="1.05" max="5.0" step="0.05" />
-        <div class="param-hint">Геометрична прогресія: ×2 = подвоєння щомісяця</div>
+        <div class="param-hint">Місяць виходу на ринок</div>
       </div>
       <div class="param-group">
         <label>Ціль — компаній (Q1 2027)</label>
         <input type="number" id="p_target" value="5000" min="100" max="100000" step="100" />
         <div class="param-hint">Цільова кількість активних компаній</div>
-      </div>
-      <div class="param-group">
-        <label>Конверсія в платних (%)</label>
-        <input type="number" id="p_conversion" value="60" min="1" max="100" step="1" />
-        <div class="param-hint">100% = всі платять; 60% = freemium модель</div>
       </div>
     </div>
   </div>
@@ -465,10 +445,22 @@ tr.breakeven td:first-child::before{content:"⭐ "}
     <div class="scenarios">
       <div class="scenario scenario--opt">
         <div class="scenario-title">🟢 Оптимістичний <span class="badge badge-green">Optimistic</span></div>
+        <div class="scenario-params">
+          <label>Клієнтів у M+1<input type="number" class="sc-inp" id="p_opt_start" value="100" min="1" step="10"></label>
+          <label>Ріст ×/міс<input type="number" class="sc-inp" id="p_opt_mult" value="1.5" min="1.05" max="5" step="0.05"></label>
+          <label>Конверсія (%)<input type="number" class="sc-inp" id="p_opt_conv" value="65" min="1" max="100" step="1"></label>
+          <label>Підписка (₴/міс)<input type="number" class="sc-inp" id="p_opt_sub" value="9000" min="0" max="100000" step="500"></label>
+        </div>
         <div id="scenario_opt_rows"></div>
       </div>
       <div class="scenario scenario--pes">
         <div class="scenario-title">🟡 Песимістичний <span class="badge badge-amber">Pessimistic</span></div>
+        <div class="scenario-params">
+          <label>Клієнтів у M+1<input type="number" class="sc-inp" id="p_pes_start" value="25" min="1" step="5"></label>
+          <label>Ріст ×/міс<input type="number" class="sc-inp" id="p_pes_mult" value="1.3" min="1.05" max="5" step="0.05"></label>
+          <label>Конверсія (%)<input type="number" class="sc-inp" id="p_pes_conv" value="50" min="1" max="100" step="1"></label>
+          <label>Підписка (₴/міс)<input type="number" class="sc-inp" id="p_pes_sub" value="6000" min="0" max="100000" step="500"></label>
+        </div>
         <div id="scenario_pes_rows"></div>
       </div>
     </div>
@@ -568,26 +560,26 @@ function fmtSign(n) {
 function getParams() {
   return {
     rate:          +document.getElementById('p_rate').value,
-    commission:    +document.getElementById('p_commission').value / 100,
-    shipmentVal:   +document.getElementById('p_shipment_val').value,
-    shipmentspm:   +document.getElementById('p_shipments_pm').value,
     subscription:  +document.getElementById('p_subscription').value,
     burn:          +document.getElementById('p_burn').value,
-    mvpOpt:        +document.getElementById('p_mvp_opt').value,
-    mvpPes:        +document.getElementById('p_mvp_pes').value,
-    clientsStart:      +document.getElementById('p_clients_start').value,
-    clientsMultiplier: +document.getElementById('p_clients_multiplier').value,
-    target:            +document.getElementById('p_target').value,
-    conversion:        +document.getElementById('p_conversion').value / 100,
+    mvp:           +document.getElementById('p_mvp').value,
+    target:        +document.getElementById('p_target').value,
+  };
+}
+
+function getScenarioParams(prefix) {
+  return {
+    clientsStart:      +document.getElementById(`p_${prefix}_start`).value,
+    clientsMultiplier: +document.getElementById(`p_${prefix}_mult`).value,
+    conversion:        +document.getElementById(`p_${prefix}_conv`).value / 100,
+    subscription:      +document.getElementById(`p_${prefix}_sub`).value,
   };
 }
 
 // ── REVENUE PER CLIENT ─────────────────────────────────────
 function revenuePerClient(p) {
-  const commUah = p.shipmentspm * p.shipmentVal * p.commission;
   const subUah  = p.subscription;
-  const totalUah = commUah + subUah;
-  return { commUah, subUah, totalUah, totalUsd: totalUah / p.rate };
+  return { subUah, totalUah: subUah, totalUsd: subUah / p.rate };
 }
 
 // ── PROJECTION ────────────────────────────────────────────
@@ -605,7 +597,6 @@ function buildProjection(p, mvpMonth) {
 
     if (!preMvp) {
       stepsSinceMvp++;
-      // Geometric: new clients in step n = start × multiplier^n
       newThisMonth = Math.round(p.clientsStart * Math.pow(p.clientsMultiplier, stepsSinceMvp));
       cumRegistered += newThisMonth;
     }
@@ -680,31 +671,33 @@ function renderTable(tableId, rows, beMonth, targetMonth) {
 }
 
 // ── SCENARIO BLOCK ─────────────────────────────────────────
-function renderScenario(containerId, p, mvpMonth, label) {
+function renderScenario(containerId, pGlobal, overrides, mvpMonth, label) {
+  const p = { ...pGlobal, ...overrides };
   const { rows, beMonth, targetMonth } = buildProjection(p, mvpMonth);
   const beRow     = beMonth     !== null ? rows[beMonth]     : null;
   const targetRow = targetMonth !== null ? rows[targetMonth] : null;
   const totalInvest = rows.reduce((s,r) => s + (r.netCF < 0 ? -r.netCF : 0), 0);
 
   const monthsToBeFromMvp = beMonth !== null ? beMonth - mvpMonth : null;
+  const targetNetCF = targetRow ? targetRow.rev - targetRow.burn : null;
 
   const rows_html = [
     ['📅 Реліз МВП', monthLabel(mvpMonth)],
-    ['⏱ Місяців до МВП', mvpMonth + ' міс'],
     ['📈 Break-even (місяч. CF ≥ 0)', beMonth !== null ? monthLabel(beMonth) : '> 20 міс'],
     ['⏱ Місяців після МВП до BE', monthsToBeFromMvp !== null ? monthsToBeFromMvp + ' міс' : '—'],
     ['👥 Платних при break-even', beRow ? beRow.payingClients.toLocaleString('uk-UA') + ' компаній' : '—'],
     ['💰 MRR при break-even', beRow ? fmt(beRow.rev) : '—'],
     ['🎯 Ціль ' + p.target.toLocaleString('uk-UA') + ' компаній', targetMonth !== null ? monthLabel(targetMonth) : '> 20 міс'],
     ['📊 MRR при досягненні цілі', targetRow ? fmt(targetRow.rev) : '—'],
+    ['💵 Чистий CF / міс на цілі', targetNetCF !== null ? fmtSign(targetNetCF) : '—'],
     ['💸 Загальні інвестиції до BE', fmt(totalInvest)],
-  ].map(([k,v],i) => {
-    const isLast = i === 8;
+  ].map(([k,v],i,arr) => {
+    const isLast = i === arr.length - 1;
     return `<div class="scenario-row" style="${isLast?'font-weight:700':''}"><span>${k}</span><span>${v}</span></div>`;
   }).join('');
 
   document.getElementById(containerId).innerHTML = rows_html;
-  return { rows, beMonth, targetMonth };
+  return { rows, beMonth, targetMonth, p };
 }
 
 // ── CHART ──────────────────────────────────────────────────
@@ -779,8 +772,10 @@ function recalc() {
   document.getElementById('burn_display').textContent = fmt(p.burn);
 
   // scenarios
-  const optData = renderScenario('scenario_opt_rows', p, p.mvpOpt, 'Оптимістичний');
-  const pesData = renderScenario('scenario_pes_rows', p, p.mvpPes, 'Песимістичний');
+  const optOv = getScenarioParams('opt');
+  const pesOv = getScenarioParams('pes');
+  const optData = renderScenario('scenario_opt_rows', p, optOv, p.mvp, 'Оптимістичний');
+  const pesData = renderScenario('scenario_pes_rows', p, pesOv, p.mvp, 'Песимістичний');
 
   // tables
   renderTable('table_opt', optData.rows, optData.beMonth, optData.targetMonth);
@@ -796,7 +791,7 @@ const dateStr = now.toLocaleDateString('uk-UA', { day:'2-digit', month:'long', y
 document.getElementById('docDate').textContent = dateStr;
 document.getElementById('footDate').textContent = dateStr;
 
-document.querySelectorAll('.param-group input, .param-group select').forEach(el => {
+document.querySelectorAll('.param-group input, .param-group select, .sc-inp').forEach(el => {
   el.addEventListener('input', recalc);
   el.addEventListener('change', recalc);
 });
@@ -906,20 +901,23 @@ COST_INPUTS.forEach(inp => {
 });
 
 // ── PARAM METADATA (for print summary + save/load) ──────
-const PARAM_IDS = ['p_rate','p_commission','p_shipment_val','p_shipments_pm','p_subscription','p_burn','p_mvp_opt','p_mvp_pes','p_clients_start','p_clients_multiplier','p_target','p_conversion'];
+const PARAM_IDS = ['p_rate','p_subscription','p_burn','p_mvp','p_target',
+                   'p_opt_start','p_opt_mult','p_opt_conv','p_opt_sub',
+                   'p_pes_start','p_pes_mult','p_pes_conv','p_pes_sub'];
 const PARAM_LABELS = {
   p_rate:'Курс USD/UAH',
-  p_commission:'Комісія (%)',
-  p_shipment_val:'Середній рейс (₴)',
-  p_shipments_pm:'Рейсів/клієнт/міс',
-  p_subscription:'Підписка (₴/міс)',
+  p_subscription:'Підписка / клієнт (₴/міс)',
   p_burn:'Burn / міс ($)',
-  p_mvp_opt:'МВП — оптиміст (міс)',
-  p_mvp_pes:'МВП — песиміст (міс)',
-  p_clients_start:'Клієнтів у M+1',
-  p_clients_multiplier:'Ріст / міс',
+  p_mvp:'Реліз МВП (міс)',
   p_target:'Ціль — компаній',
-  p_conversion:'Конверсія (%)',
+  p_opt_start:'OPT · Клієнтів у M+1',
+  p_opt_mult:'OPT · Ріст ×',
+  p_opt_conv:'OPT · Конверсія (%)',
+  p_opt_sub:'OPT · Підписка (₴)',
+  p_pes_start:'PES · Клієнтів у M+1',
+  p_pes_mult:'PES · Ріст ×',
+  p_pes_conv:'PES · Конверсія (%)',
+  p_pes_sub:'PES · Підписка (₴)',
 };
 
 function collectParams() {
