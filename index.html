@@ -362,9 +362,9 @@ tr.breakeven td:first-child::before{content:"⭐ "}
         <div class="bp-fleet">
           <span>🚚 Автопарк (авто)</span>
           <input id="b_fleet" type="number" class="cost-amt" value="20" min="1" step="1">
-          <span style="margin-left:12px">Рейсів / авто / міс</span>
-          <input id="b_trips_per_veh" type="number" class="cost-amt" value="1" min="0" step="0.5">
-          <span class="bp-fleet-hint" id="fleet_hint">20 рейсів/міс</span>
+          <span style="margin-left:12px">₴ / авто / міс</span>
+          <input id="b_sub_per_veh" type="number" class="cost-amt" value="450" min="0" step="50">
+          <span class="bp-fleet-hint" id="fleet_hint">≈ $10 / авто</span>
         </div>
 
         <table class="bp-table">
@@ -408,11 +408,10 @@ tr.breakeven td:first-child::before{content:"⭐ "}
 
         <div class="rev-breakdown" style="margin-top:10px;background:#FFF4E6">
           <div class="rev-breakdown-title">Вартість TreximAI / міс</div>
-          <div class="rev-row"><span>Підписка</span><span id="cst_sub_uah">₴6 000</span></div>
-          <div class="rev-row"><span id="cst_comm_l">Комісія з рейсів (3%)</span><span id="cst_comm_uah">₴15 000</span></div>
-          <div class="rev-total"><span>Разом</span><span id="cst_total_uah">₴21 000</span></div>
+          <div class="rev-row"><span id="cst_sub_l">Підписка (20 авто × ₴450)</span><span id="cst_sub_uah">₴9 000</span></div>
+          <div class="rev-total"><span>Разом</span><span id="cst_total_uah">₴9 000</span></div>
           <div class="rev-total" style="margin-top:6px;padding-top:6px;border-top:1px dashed #F5D9A7">
-            <span>≈ в доларах</span><span id="cst_total_usd" style="color:var(--navy);font-size:15px">$477</span>
+            <span>≈ в доларах</span><span id="cst_total_usd" style="color:var(--navy);font-size:15px">$205</span>
           </div>
         </div>
 
@@ -805,13 +804,13 @@ document.querySelectorAll('.param-group input, .param-group select').forEach(el 
 });
 
 // ── BENEFIT (carrier savings) ───────────────────────────
-const BENEFIT_IDS = ['b_fleet','b_trips_per_veh','b_zp_log','b_cnt_log_b','b_cnt_log_a','b_zp_buh','b_cnt_buh_b','b_cnt_buh_a','b_zp_coor','b_cnt_coor_b','b_cnt_coor_a'];
+const BENEFIT_IDS = ['b_fleet','b_sub_per_veh','b_zp_log','b_cnt_log_b','b_cnt_log_a','b_zp_buh','b_cnt_buh_b','b_cnt_buh_a','b_zp_coor','b_cnt_coor_b','b_cnt_coor_a'];
 
 function getBenefit() {
   const g = id => +document.getElementById(id).value || 0;
   return {
     fleet:    g('b_fleet'),
-    tripsVeh: g('b_trips_per_veh'),
+    subVeh:   g('b_sub_per_veh'),
     zpLog:    g('b_zp_log'),    cntLogB:  g('b_cnt_log_b'),  cntLogA:  g('b_cnt_log_a'),
     zpBuh:    g('b_zp_buh'),    cntBuhB:  g('b_cnt_buh_b'),  cntBuhA:  g('b_cnt_buh_a'),
     zpCoor:   g('b_zp_coor'),   cntCoorB: g('b_cnt_coor_b'), cntCoorA: g('b_cnt_coor_a'),
@@ -829,22 +828,20 @@ function updateBenefit(p, rev) {
   const benefitUah = logUah + buhUah + coorUah;
   const benefitUsd = benefitUah / p.rate;
 
-  const tripsMonth = b.fleet * b.tripsVeh;
-  const bCommUah   = tripsMonth * p.shipmentVal * p.commission;
-  const bSubUah    = p.subscription;
-  const bTotalUah  = bCommUah + bSubUah;
-  const bTotalUsd  = bTotalUah / p.rate;
+  const bSubUah   = b.fleet * b.subVeh;
+  const bTotalUah = bSubUah;
+  const bTotalUsd = bTotalUah / p.rate;
+  const subPerVehUsd = b.subVeh / p.rate;
 
-  document.getElementById('fleet_hint').textContent = `${Math.round(tripsMonth)} рейсів/міс`;
+  document.getElementById('fleet_hint').textContent = `≈ $${subPerVehUsd.toFixed(0)} / авто`;
   document.getElementById('bn_log_uah').textContent  = fmtUah(logUah);
   document.getElementById('bn_buh_uah').textContent  = fmtUah(buhUah);
   document.getElementById('bn_coor_uah').textContent = fmtUah(coorUah);
   document.getElementById('bn_total_uah').textContent = fmtUah(benefitUah);
   document.getElementById('bn_total_usd').textContent = '≈ ' + fmtUsd(benefitUsd);
 
+  document.getElementById('cst_sub_l').textContent     = `Підписка (${b.fleet} авто × ${fmtUah(b.subVeh)})`;
   document.getElementById('cst_sub_uah').textContent   = fmtUah(bSubUah);
-  document.getElementById('cst_comm_l').textContent    = `Комісія з рейсів (${(p.commission*100).toFixed(1)}% · ${Math.round(tripsMonth)} рейсів)`;
-  document.getElementById('cst_comm_uah').textContent  = fmtUah(bCommUah);
   document.getElementById('cst_total_uah').textContent = fmtUah(bTotalUah);
   document.getElementById('cst_total_usd').textContent = fmtUsd(bTotalUsd);
 
