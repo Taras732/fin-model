@@ -263,24 +263,9 @@ tr.breakeven td:first-child::before{content:"⭐ "}
         <div class="param-hint">Поточний: 44 грн/дол</div>
       </div>
       <div class="param-group">
-        <label>Комісія з рейсу (%)</label>
-        <input type="number" id="p_commission" value="3" min="1" max="15" step="0.5" />
-        <div class="param-hint">Базова: 5% від вартості рейсу</div>
-      </div>
-      <div class="param-group">
-        <label>Середній рейс (₴)</label>
-        <input type="number" id="p_shipment_val" value="25000" min="1000" max="200000" step="1000" />
-        <div class="param-hint">Середня вартість одного рейсу</div>
-      </div>
-      <div class="param-group">
-        <label>Рейсів/клієнт/міс</label>
-        <input type="number" id="p_shipments_pm" value="20" min="1" max="200" step="1" />
-        <div class="param-hint">Середня кількість рейсів</div>
-      </div>
-      <div class="param-group">
         <label>Підписка/клієнт (₴/міс)</label>
-        <input type="number" id="p_subscription" value="6000" min="0" max="50000" step="500" />
-        <div class="param-hint">Середній тариф (Starter–Standard)</div>
+        <input type="number" id="p_subscription" value="9000" min="0" max="50000" step="500" />
+        <div class="param-hint">Середній ARPU (≈ 20 авто × ₴450)</div>
       </div>
       <div class="param-group">
         <label>Щомісячний burn ($)</label>
@@ -444,9 +429,9 @@ tr.breakeven td:first-child::before{content:"⭐ "}
         <div class="kpi__sub">Фіксовані витрати</div>
       </div>
       <div class="card kpi">
-        <div class="kpi__label">Дохід/клієнт</div>
-        <div class="kpi__value navy" id="kpi_rev_client">—</div>
-        <div class="kpi__sub">середній / місяць</div>
+        <div class="kpi__label">Економія клієнта</div>
+        <div class="kpi__value green" id="kpi_savings">—</div>
+        <div class="kpi__sub">на персоналі / місяць</div>
       </div>
       <div class="card kpi">
         <div class="kpi__label">🚀 Запуск МВП</div>
@@ -570,9 +555,6 @@ function fmtSign(n) {
 function getParams() {
   return {
     rate:          +document.getElementById('p_rate').value,
-    commission:    +document.getElementById('p_commission').value / 100,
-    shipmentVal:   +document.getElementById('p_shipment_val').value,
-    shipmentspm:   +document.getElementById('p_shipments_pm').value,
     subscription:  +document.getElementById('p_subscription').value,
     burn:          +document.getElementById('p_burn').value,
     mvpOpt:        +document.getElementById('p_mvp_opt').value,
@@ -586,10 +568,8 @@ function getParams() {
 
 // ── REVENUE PER CLIENT ─────────────────────────────────────
 function revenuePerClient(p) {
-  const commUah = p.shipmentspm * p.shipmentVal * p.commission;
   const subUah  = p.subscription;
-  const totalUah = commUah + subUah;
-  return { commUah, subUah, totalUah, totalUsd: totalUah / p.rate };
+  return { subUah, totalUah: subUah, totalUsd: subUah / p.rate };
 }
 
 // ── PROJECTION ────────────────────────────────────────────
@@ -773,11 +753,11 @@ function recalc() {
   const rev = revenuePerClient(p);
 
   // Benefit block
-  updateBenefit(p, rev);
+  const benefit = updateBenefit(p, rev);
 
   // KPIs
   document.getElementById('kpi_burn').textContent = fmt(p.burn);
-  document.getElementById('kpi_rev_client').textContent = fmt(rev.totalUsd);
+  document.getElementById('kpi_savings').textContent = fmt(benefit.benefitUsd);
   document.getElementById('burn_display').textContent = fmt(p.burn);
 
   // scenarios
@@ -863,6 +843,7 @@ function updateBenefit(p, rev) {
     roiEl.textContent = '—';
     payEl.textContent = '—';
   }
+  return { benefitUah, benefitUsd };
 }
 
 function rescaleStaffFromFleet() {
@@ -909,12 +890,9 @@ COST_INPUTS.forEach(inp => {
 });
 
 // ── PARAM METADATA (for print summary + save/load) ──────
-const PARAM_IDS = ['p_rate','p_commission','p_shipment_val','p_shipments_pm','p_subscription','p_burn','p_mvp_opt','p_mvp_pes','p_clients_start','p_clients_multiplier','p_target','p_conversion'];
+const PARAM_IDS = ['p_rate','p_subscription','p_burn','p_mvp_opt','p_mvp_pes','p_clients_start','p_clients_multiplier','p_target','p_conversion'];
 const PARAM_LABELS = {
   p_rate:'Курс USD/UAH',
-  p_commission:'Комісія (%)',
-  p_shipment_val:'Середній рейс (₴)',
-  p_shipments_pm:'Рейсів/клієнт/міс',
   p_subscription:'Підписка (₴/міс)',
   p_burn:'Burn / міс ($)',
   p_mvp_opt:'МВП — оптиміст (міс)',
