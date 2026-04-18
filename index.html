@@ -371,14 +371,14 @@ tr.breakeven td:first-child::before{content:"⭐ "}
         <div class="kpi__sub">середній / місяць</div>
       </div>
       <div class="card kpi">
-        <div class="kpi__label">Break-even (оптим.)</div>
-        <div class="kpi__value green" id="kpi_be_opt">—</div>
-        <div class="kpi__sub" id="kpi_be_opt_date">клієнтів / дата</div>
+        <div class="kpi__label">🚀 Запуск МВП</div>
+        <div class="kpi__value green">Жовтень 2026</div>
+        <div class="kpi__sub">початок монетизації</div>
       </div>
       <div class="card kpi">
-        <div class="kpi__label">Break-even (песим.)</div>
-        <div class="kpi__value amber" id="kpi_be_pes">—</div>
-        <div class="kpi__sub" id="kpi_be_pes_date">клієнтів / дата</div>
+        <div class="kpi__label">📦 Введення еТТН</div>
+        <div class="kpi__value amber">Січень 2027</div>
+        <div class="kpi__sub">обов'язкова цифрова ТТН</div>
       </div>
     </div>
   </div>
@@ -713,16 +713,6 @@ function recalc() {
   // scenarios
   const optData = renderScenario('scenario_opt_rows', p, p.mvpOpt, 'Оптимістичний');
   const pesData = renderScenario('scenario_pes_rows', p, p.mvpPes, 'Песимістичний');
-
-  // be dates for KPI
-  const beOptLabel = optData.beMonth !== null ? monthLabel(optData.beMonth) : '>20 міс';
-  const bePesLabel = pesData.beMonth !== null ? monthLabel(pesData.beMonth) : '>20 міс';
-  const beOptClients = optData.beMonth !== null ? optData.rows[optData.beMonth].cumClients + ' кл.' : '—';
-  const bePesClients = pesData.beMonth !== null ? pesData.rows[pesData.beMonth].cumClients + ' кл.' : '—';
-  document.getElementById('kpi_be_opt').textContent = beOptLabel;
-  document.getElementById('kpi_be_opt_date').textContent = beOptClients;
-  document.getElementById('kpi_be_pes').textContent = bePesLabel;
-  document.getElementById('kpi_be_pes_date').textContent = bePesClients;
 
   // tables
   renderTable('table_opt', optData.rows, optData.beMonth, optData.targetMonth);
