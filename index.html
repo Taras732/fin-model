@@ -362,9 +362,7 @@ tr.breakeven td:first-child::before{content:"⭐ "}
         <div class="bp-fleet">
           <span>🚚 Автопарк (авто)</span>
           <input id="b_fleet" type="number" class="cost-amt" value="20" min="1" step="1">
-          <span style="margin-left:12px">₴ / авто / міс</span>
-          <input id="b_sub_per_veh" type="number" class="cost-amt" value="450" min="0" step="50">
-          <span class="bp-fleet-hint" id="fleet_hint">≈ $10 / авто</span>
+          <span class="bp-fleet-hint" id="fleet_hint">для 20 авто</span>
         </div>
 
         <table class="bp-table">
@@ -804,13 +802,12 @@ document.querySelectorAll('.param-group input, .param-group select').forEach(el 
 });
 
 // ── BENEFIT (carrier savings) ───────────────────────────
-const BENEFIT_IDS = ['b_fleet','b_sub_per_veh','b_zp_log','b_cnt_log_b','b_cnt_log_a','b_zp_buh','b_cnt_buh_b','b_cnt_buh_a','b_zp_coor','b_cnt_coor_b','b_cnt_coor_a'];
+const BENEFIT_IDS = ['b_fleet','b_zp_log','b_cnt_log_b','b_cnt_log_a','b_zp_buh','b_cnt_buh_b','b_cnt_buh_a','b_zp_coor','b_cnt_coor_b','b_cnt_coor_a'];
 
 function getBenefit() {
   const g = id => +document.getElementById(id).value || 0;
   return {
     fleet:    g('b_fleet'),
-    subVeh:   g('b_sub_per_veh'),
     zpLog:    g('b_zp_log'),    cntLogB:  g('b_cnt_log_b'),  cntLogA:  g('b_cnt_log_a'),
     zpBuh:    g('b_zp_buh'),    cntBuhB:  g('b_cnt_buh_b'),  cntBuhA:  g('b_cnt_buh_a'),
     zpCoor:   g('b_zp_coor'),   cntCoorB: g('b_cnt_coor_b'), cntCoorA: g('b_cnt_coor_a'),
@@ -828,19 +825,18 @@ function updateBenefit(p, rev) {
   const benefitUah = logUah + buhUah + coorUah;
   const benefitUsd = benefitUah / p.rate;
 
-  const bSubUah   = b.fleet * b.subVeh;
+  const bSubUah   = p.subscription;
   const bTotalUah = bSubUah;
   const bTotalUsd = bTotalUah / p.rate;
-  const subPerVehUsd = b.subVeh / p.rate;
 
-  document.getElementById('fleet_hint').textContent = `≈ $${subPerVehUsd.toFixed(0)} / авто`;
+  document.getElementById('fleet_hint').textContent = `для ${b.fleet} авто`;
   document.getElementById('bn_log_uah').textContent  = fmtUah(logUah);
   document.getElementById('bn_buh_uah').textContent  = fmtUah(buhUah);
   document.getElementById('bn_coor_uah').textContent = fmtUah(coorUah);
   document.getElementById('bn_total_uah').textContent = fmtUah(benefitUah);
   document.getElementById('bn_total_usd').textContent = '≈ ' + fmtUsd(benefitUsd);
 
-  document.getElementById('cst_sub_l').textContent     = `Підписка (${b.fleet} авто × ${fmtUah(b.subVeh)})`;
+  document.getElementById('cst_sub_l').textContent     = 'Підписка';
   document.getElementById('cst_sub_uah').textContent   = fmtUah(bSubUah);
   document.getElementById('cst_total_uah').textContent = fmtUah(bTotalUah);
   document.getElementById('cst_total_usd').textContent = fmtUsd(bTotalUsd);
